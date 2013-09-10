@@ -32,7 +32,7 @@ require_once "SmartyPants/smartypants-typographer.php";
 
 // Full path to dot program and error log
 if (substr(strtoupper(PHP_OS),0,3) == "WIN") { // Windows
-	define('DOTPATH', '"C:/Program Files (x86)/Graphviz 2.28/bin/dot.exe"');
+	define('DOTPATH', '"C:/Program Files (x86)/Graphviz2.34/bin/dot.exe"');
 	define('DOTERRLOGPATH', 'C:/WINDOWS/Temp/dot-errlog.txt');
 } else if (PHP_OS == "Darwin") { // Mac OS X
 	define('DOTPATH', '/opt/local/bin/dot');
