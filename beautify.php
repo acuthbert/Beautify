@@ -67,7 +67,6 @@ function beautify($s) {
         $code = html_entity_decode(trim($matches[4][$i][0]));
         $language = $matches[3][$i][0];
         if ($language == "dot-view") {
-                $code = preg_replace("/{/s", "{\n\rgraph [bgcolor=transparent];", $code); // Remove background rectangle
                 $descriptorspec = array(
                    0 => array("pipe", "r"),
                    1 => array("pipe", "w"),
@@ -96,7 +95,38 @@ function beautify($s) {
                     $out = "<div class=\"beautify-graph\"><!--[if gt IE 8]>-->$svg<!--<![endif]--><!--[if lte IE 8]>$vml<![endif]--></div>\r\n";
                     $result .= $out;
                 }
-        } else {
+        }
+        elseif ($language == "neato-view") {
+	        $descriptorspec = array(
+		        0 => array("pipe", "r"),
+		        1 => array("pipe", "w"),
+		        2 => array("file", DOTERRLOGPATH, "w")
+	        );
+	        $proc = proc_open( str_replace( "dot", "neato", DOTPATH )." -Tsvg", $descriptorspec, $pipes);
+	        if (is_resource($proc)) {
+		        fwrite($pipes[0], $code);
+		        fclose($pipes[0]);
+		        $svg = stream_get_contents($pipes[1]);
+		        fclose($pipes[1]);
+		        proc_close($proc);
+		        $svg = preg_replace("/.*<svg/s", "<svg", $svg); // Remove <?xml and <!doctype...
+		        $svg = preg_replace("/id=\"(.*?)\"/s", "id=\"$1_$i\"", $svg); // Prevent duplicate id's
+		        if (OUTPUTVML) {
+			        $proc = proc_open(DOTPATH." -Tvml", $descriptorspec, $pipes);
+			        fwrite($pipes[0], $code);
+			        fclose($pipes[0]);
+			        $vml = stream_get_contents($pipes[1]);
+			        fclose($pipes[1]);
+			        proc_close($proc);
+			        $vml = preg_replace("/<!--.*?-->/s", "", $vml); // Remove comments in favor of conditional comments
+		        } else {
+			        $vml = "<p>SVG is not supported by your browser</p>";
+		        }
+		        $out = "<div class=\"beautify-graph\"><!--[if gt IE 8]>-->$svg<!--<![endif]--><!--[if lte IE 8]>$vml<![endif]--></div>\r\n";
+		        $result .= $out;
+	        }
+        }
+        else {
             if (!$language) {
                 $language = 'text';
             }
